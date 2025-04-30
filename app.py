@@ -71,7 +71,7 @@ if tx_file and holders_file:
 
     st.subheader("📤 Génération du rapport Word")
 
-    if st.button("📝 Télécharger le rapport complet Word"):
+    if st.button("📝 Mise au format Word du rapport complet "):
         doc = Document()
         doc.add_heading("Analyse des ventes sur 24h – Token LUIA", level=1)
         doc.add_paragraph(f"Date : {datetime.utcnow().strftime('%d/%m/%Y %H:%M UTC')}")
