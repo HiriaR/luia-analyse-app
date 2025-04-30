@@ -17,7 +17,7 @@ tx_file = st.file_uploader("🧾 Fichier de transactions (CSV)", type="csv")
 holders_file = st.file_uploader("📄 Fichier de holders (CSV)", type="csv")
 
 st.subheader("🔖 Associer des noms personnalisés à des wallets")
-raw_aliases = st.text_area("Noms (exemple: "0xabc123": Kale le créateur)", height=150)
+raw_aliases = st.text_area("Noms (exemple: "0xabc123etcxxxx ": Kale le créateur)", height=150)
 
 alias_map = {}
 if raw_aliases:
