@@ -47,7 +47,7 @@ if tx_file and holders_file:
     sold_by_wallet['Wallet'] = sold_by_wallet['Wallet'].str.lower()
 
     merged = top_20.merge(sold_by_wallet, left_on='HolderAddress', right_on='Wallet', how='left')
-    exclude_wallets = ["0x2200c5ac68f2b7ed93f2dfda39d8fdd2eddfddf6"]
+    exclude_wallets = ["0x2200C5ac2f9D8d635dB040A6F4eAb5ef6BF9E855"]
     merged = merged[~merged['HolderAddress'].isin([e.lower() for e in exclude_wallets])]
 
     merged['Nom'] = merged['HolderAddress'].map(alias_map).fillna("")
