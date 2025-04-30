@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Analyseur Wallets LUIA", layout="wide")
 st.title("📊 Analyse automatique de tokens LUIA")
@@ -41,6 +42,14 @@ if tx_file and holders_file:
     # Top 20 holders
     top_20 = holders.head(20)
     merged = top_20.merge(sold_by_wallet, left_on='HolderAddress', right_on='Wallet', how='left')
+
+    # 🧽 Filtrer PancakeSwap Pool
+    exclude_wallets = [
+        "0x2200c5ac68f2b7ed93f2dfda39d8fdd2eddfddf6"  # PancakeSwap LP
+    ]
+    merged = merged[~merged['HolderAddress'].str.lower().isin([addr.lower() for addr in exclude_wallets])]
+
+    # Associer les noms
     merged['Nom'] = merged['HolderAddress'].str.lower().map(alias_map).fillna("")
 
     st.subheader("📋 Résumé des top 20 holders")
@@ -48,12 +57,12 @@ if tx_file and holders_file:
 
     # Graphique
     st.subheader("📈 Graphique des soldes vs ventes")
-    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.bar(merged['HolderAddress'], merged['Balance'], label='Solde actuel')
     ax.bar(merged['HolderAddress'], merged['Total_Vendu_24h'].fillna(0), label='Vendu (24h)', alpha=0.7)
-    ax.set_xticklabels(merged['Nom'], rotation=90)
+    ax.set_xticks(range(len(merged)))
+    ax.set_xticklabels(merged['Nom'].replace('', merged['HolderAddress']), rotation=90)
     ax.legend()
     st.pyplot(fig)
 
-    st.success("✅ Analyse terminée. Rapport prêt à exporter bientôt.")
+    st.success("✅ Analyse terminée. Prêt pour l’export Word.")
