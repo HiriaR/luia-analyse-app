@@ -44,8 +44,13 @@ if tx_file and holders_file:
     top_20 = holders.head(20)
     merged = top_20.merge(sold_by_wallet, left_on='HolderAddress', right_on='Wallet', how='left')
 
+    # 🧽 Normaliser les adresses pour comparaison
+    merged['HolderAddress'] = merged['HolderAddress'].str.lower()
     exclude_wallets = ["0x2200c5ac68f2b7ed93f2dfda39d8fdd2eddfddf6"]
-    merged = merged[~merged['HolderAddress'].str.lower().isin([a.lower() for a in exclude_wallets])]
+    exclude_wallets = [addr.lower() for addr in exclude_wallets]
+
+    # ✅ Filtrer PancakeSwap Pool et autres
+    merged = merged[~merged['HolderAddress'].isin(exclude_wallets)]
 
     merged['Nom'] = merged['HolderAddress'].str.lower().map(alias_map).fillna("")
     merged['Label'] = merged['Nom']
