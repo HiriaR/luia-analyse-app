@@ -46,7 +46,7 @@ if tx_file and holders_file:
 
     # 🧽 Normaliser les adresses pour comparaison
     merged['HolderAddress'] = merged['HolderAddress'].str.lower()
-    exclude_wallets = ["0x2200c5ac68f2b7ed93f2dfda39d8fdd2eddfddf6"]
+    exclude_wallets = ["0x2200C5ac2f9D8d635dB040A6F4eAb5ef6BF9E855"]
     exclude_wallets = [addr.lower() for addr in exclude_wallets]
 
     # ✅ Filtrer PancakeSwap Pool et autres
