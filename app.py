@@ -55,14 +55,16 @@ if tx_file and holders_file:
     st.subheader("📋 Résumé des top 20 holders")
     st.dataframe(merged[['Nom', 'HolderAddress', 'Balance', 'Total_Vendu_24h']])
 
-    # Graphique
-    st.subheader("📈 Graphique des soldes vs ventes")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.bar(merged['HolderAddress'], merged['Balance'], label='Solde actuel')
-    ax.bar(merged['HolderAddress'], merged['Total_Vendu_24h'].fillna(0), label='Vendu (24h)', alpha=0.7)
-    ax.set_xticks(range(len(merged)))
-    ax.set_xticklabels(merged['Nom'].replace('', merged['HolderAddress']), rotation=90)
-    ax.legend()
-    st.pyplot(fig)
+   # Créer une colonne pour les étiquettes : nom s'il existe, sinon adresse
+merged['Label'] = merged['Nom']
+merged.loc[merged['Label'] == '', 'Label'] = merged['HolderAddress']
+
+# Affichage du graphique
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.bar(merged['Label'], merged['Balance'], label='Solde actuel')
+ax.bar(merged['Label'], merged['Total_Vendu_24h'].fillna(0), label='Vendu (24h)', alpha=0.7)
+ax.set_xticklabels(merged['Label'], rotation=90)
+ax.legend()
+st.pyplot(fig)
 
     st.success("✅ Analyse terminée. Prêt pour l’export Word.")
