@@ -11,7 +11,7 @@ import os
 LUIA_PRICE_USD = 0.00010411
 
 st.set_page_config(page_title="Analyseur Wallets LUIA", layout="wide")
-st.title("Analyse complÃ¨te des Wallets du Token LUIA")
+st.title("A Analyse complÃ¨te des Wallets du Token LUIA")
 
 tx_file = st.file_uploader("ðŸ§¾ Fichier de transactions (CSV)", type="csv")
 holders_file = st.file_uploader("ðŸ“„ Fichier de holders (CSV)", type="csv")
@@ -29,8 +29,8 @@ if raw_aliases:
 if tx_file and holders_file:
     st.success("âœ… Fichiers chargÃ©s, traitement en cours...")
 
-    transactions = pd.read_csv(tx_file)
-    holders = pd.read_csv(holders_file)
+    transactions = pd.read_csv(tx_file, encoding='utf-8')
+    holders = pd.read_csv(holders_file, encoding='utf-8')
 
     transactions['DateTime (UTC)'] = pd.to_datetime(transactions['DateTime (UTC)'])
     transactions['Quantity'] = transactions['Quantity'].astype(str).str.replace(',', '').astype(float)
@@ -41,6 +41,7 @@ if tx_file and holders_file:
 
     latest_time = transactions['DateTime (UTC)'].max()
     start_time = latest_time - pd.Timedelta(hours=24)
+    recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
     recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
     recent_sales = recent_sales[~recent_sales['From'].isin(exclude_wallets)]
     sold_by_wallet = recent_sales.groupby('From')['Quantity'].sum().reset_index()
