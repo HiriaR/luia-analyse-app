@@ -10,8 +10,8 @@ import os
 
 LUIA_PRICE_USD = 0.00010411
 
-st.set_page_config(page_title="Analyseur Wallets LUIA", layout="wide")
-st.title("A Analyse complÃ¨te des Wallets du Token LUIA")
+st.set_page_config(page_title="AAnalyseur Wallets LUIA", layout="wide")
+st.title("ðŸ“Š Analyse des wallets LUIA")
 
 tx_file = st.file_uploader("ðŸ§¾ Fichier de transactions (CSV)", type="csv")
 holders_file = st.file_uploader("ðŸ“„ Fichier de holders (CSV)", type="csv")
@@ -41,6 +41,7 @@ if tx_file and holders_file:
 
     latest_time = transactions['DateTime (UTC)'].max()
     start_time = latest_time - pd.Timedelta(hours=24)
+    recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
     recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
     recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
     recent_sales = recent_sales[~recent_sales['From'].isin(exclude_wallets)]
@@ -165,3 +166,18 @@ if tx_file and holders_file:
             file_name="analyse_wallets_luia.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+
+    st.subheader("ðŸ“Š Visualiser un wallet spÃ©cifique")
+    wallet_to_plot = st.selectbox("Choisir un wallet Ã  analyser (dans le top 20)", merged['Label'].tolist())
+
+    selected_wallet = merged[merged['Label'] == wallet_to_plot]
+    if not selected_wallet.empty:
+        addr = selected_wallet['HolderAddress'].values[0]
+        wallet_tx = recent_sales[recent_sales['From'].str.strip().str.lower() == addr]
+
+        if not wallet_tx.empty:
+            wallet_tx = wallet_tx.sort_values("DateTime (UTC)")
+            st.line_chart(wallet_tx.set_index("DateTime (UTC)")["Quantity"])
+        else:
+            st.info("Aucune transaction trouvÃ©e pour ce wallet dans les 24 derniÃ¨res heures.")
