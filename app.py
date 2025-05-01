@@ -108,7 +108,7 @@ if tx_file and holders_file:
             addr = wallet['HolderAddress']
             name = wallet['Nom'] or addr
             doc.add_heading(f"{name}", level=3)
-            subtx = recent_sales[recent_sales['From'] == addr]
+            subtx = recent_sales[recent_sales['From'].astype(str).str.strip().str.lower() == addr]
             subtx = subtx.sort_values('DateTime (UTC)')
             if subtx.empty:
                 doc.add_paragraph("Aucune transaction trouvÃ©e.")
