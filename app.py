@@ -10,8 +10,8 @@ import os
 
 LUIA_PRICE_USD = 0.00010411
 
-st.set_page_config(page_title="AAnalyseur Wallets LUIA", layout="wide")
-st.title("ðŸ“Š Analyse des wallets LUIA")
+st.set_page_config(page_title="Analyseur Wallets LUIA by Luia Team", layout="wide")
+st.title("ðŸ“Š AAnalyse des wallets LUIA")
 
 tx_file = st.file_uploader("ðŸ§¾ Fichier de transactions (CSV)", type="csv")
 holders_file = st.file_uploader("ðŸ“„ Fichier de holders (CSV)", type="csv")
@@ -44,7 +44,7 @@ if tx_file and holders_file:
     recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
     recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
     recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
-    recent_sales = recent_sales[~recent_sales['From'].isin(exclude_wallets)]
+    
     sold_by_wallet = recent_sales.groupby('From')['Quantity'].sum().reset_index()
     sold_by_wallet.columns = ['Wallet', 'Total_Vendu_24h']
 
