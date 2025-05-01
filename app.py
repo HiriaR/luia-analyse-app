@@ -8,7 +8,7 @@ from datetime import datetime
 import tempfile
 import os
 
-LUIA_PRICE_USD = 0.00010411
+LUIA_PRICE_USD = 0.000095514
 
 st.set_page_config(page_title="Analyseur Wallets LUIA", layout="wide")
 st.title("📊 Analyse complète des Wallets du Token LUIA")
