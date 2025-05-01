@@ -11,7 +11,7 @@ import os
 LUIA_PRICE_USD = 0.00010411
 
 st.set_page_config(page_title="Analyseur Wallets LUIA by Luia Team", layout="wide")
-st.title("ðŸ“Š Analyse complÃ¨te des Wallets du Token LUIA")
+st.title("ðŸ“Š Analyse complÃ¨te des Wallets du Token LUIA by Luia Team")
 
 tx_file = st.file_uploader("ðŸ§¾ Fichier de transactions (CSV)", type="csv")
 holders_file = st.file_uploader("ðŸ“„ Fichier de holders (CSV)", type="csv")
