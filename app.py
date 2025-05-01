@@ -10,8 +10,8 @@ import os
 
 LUIA_PRICE_USD = 0.00010411
 
-st.set_page_config(page_title="Analyseur Wallets LUIA by Luia Team", layout="wide")
-st.title("ðŸ“Š Analyse complÃ¨te des Wallets du Token LUIA by Luia Team")
+st.set_page_config(page_title="Analyseur Wallets LUIA", layout="wide")
+st.title("Analyse complÃ¨te des Wallets du Token LUIA")
 
 tx_file = st.file_uploader("ðŸ§¾ Fichier de transactions (CSV)", type="csv")
 holders_file = st.file_uploader("ðŸ“„ Fichier de holders (CSV)", type="csv")
@@ -42,13 +42,15 @@ if tx_file and holders_file:
     latest_time = transactions['DateTime (UTC)'].max()
     start_time = latest_time - pd.Timedelta(hours=24)
     recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
+    recent_sales = recent_sales[~recent_sales['From'].isin(exclude_wallets)]
     sold_by_wallet = recent_sales.groupby('From')['Quantity'].sum().reset_index()
     sold_by_wallet.columns = ['Wallet', 'Total_Vendu_24h']
 
     top_20 = holders.head(20)
     merged = top_20.merge(sold_by_wallet, left_on='HolderAddress', right_on='Wallet', how='left')
     exclude_wallets = ["0x2200c5ac68f2b7ed93f2dfda39d8fdd2eddfddf6"]
-    merged = merged[~merged['HolderAddress'].isin([e.lower() for e in exclude_wallets])]
+    exclude_wallets = [e.lower().strip() for e in exclude_wallets]
+    merged = merged[~merged['HolderAddress'].isin(exclude_wallets)]
 
     merged['Nom'] = merged['HolderAddress'].map(alias_map).fillna("")
     merged['Label'] = merged['Nom']
@@ -103,7 +105,7 @@ if tx_file and holders_file:
 
         doc.add_page_break()
         doc.add_heading("Top 5 vendeurs â€“ DÃ©tail des transactions", level=2)
-        top5 = merged.nlargest(5, 'Total_Vendu_24h')
+        top5 = merged[(merged['Total_Vendu_24h'] > 0) & (~merged['HolderAddress'].isin(exclude_wallets))].nlargest(5, 'Total_Vendu_24h')
         for _, wallet in top5.iterrows():
             addr = wallet['HolderAddress']
             name = wallet['Nom'] or addr
@@ -111,7 +113,7 @@ if tx_file and holders_file:
             subtx = recent_sales[recent_sales['From'].astype(str).str.strip().str.lower() == addr]
             subtx = subtx.sort_values('DateTime (UTC)')
             if subtx.empty:
-                doc.add_paragraph("Aucune transaction trouvÃ©e.")
+                doc.add_paragraph("Aucune transaction trouvÃ©e pour cette adresse durant les 24 derniÃ¨res heures.")
             else:
                 tx_table = doc.add_table(rows=1, cols=3)
                 tx_table.style = 'Table Grid'
@@ -125,7 +127,7 @@ if tx_file and holders_file:
                     row[1].text = f"{tx['Quantity']:,.2f}"
                     row[2].text = f"{tx['Quantity'] * LUIA_PRICE_USD:,.2f} $"
 
-        doc.add_paragraph("\n\nRapport gÃ©nÃ©rÃ© automatiquement et signÃ© par Jarvis.")
+        doc.add_paragraph("Rapport gÃ©nÃ©rÃ© automatiquement et signÃ© par Jarvis.")
         output = tempfile.mktemp(suffix=".docx")
         doc.save(output)
 
@@ -134,3 +136,31 @@ if tx_file and holders_file:
 
         os.remove(tmp_chart)
         os.remove(output)
+
+
+    st.subheader("ðŸ“¤ Exporter les donnÃ©es en Excel")
+    if st.button("ðŸ“¥ TÃ©lÃ©charger le fichier Excel"):
+        import io
+        from openpyxl import Workbook
+        output_excel = io.BytesIO()
+        writer = pd.ExcelWriter(output_excel, engine='openpyxl')
+
+        # Export principal
+        merged.to_excel(writer, index=False, sheet_name='Top20_Holders')
+        # Export top 5 ventes avec transactions
+        for _, wallet in top5.iterrows():
+            name = wallet['Nom'] or wallet['HolderAddress']
+            addr = wallet['HolderAddress']
+            subtx = recent_sales[recent_sales['From'].astype(str).str.strip().str.lower() == addr]
+            if not subtx.empty:
+                sheet_name = name[:30].replace(" ", "_")
+                subtx[['DateTime (UTC)', 'Quantity']].to_excel(writer, index=False, sheet_name=sheet_name)
+
+        writer.close()
+        output_excel.seek(0)
+        st.download_button(
+            label="ðŸ“¥ TÃ©lÃ©charger les donnÃ©es Excel",
+            data=output_excel,
+            file_name="analyse_wallets_luia.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
