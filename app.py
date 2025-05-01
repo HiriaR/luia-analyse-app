@@ -8,16 +8,16 @@ from datetime import datetime
 import tempfile
 import os
 
-LUIA_PRICE_USD = 0.000095514
+LUIA_PRICE_USD = 0.00010411
 
 st.set_page_config(page_title="Analyseur Wallets LUIA", layout="wide")
-st.title("📊 Analyse complète des Wallets du Token LUIA")
+st.title("ðŸ“Š Analyse complÃ¨te des Wallets du Token LUIA")
 
-tx_file = st.file_uploader("🧾 Fichier de transactions (CSV)", type="csv")
-holders_file = st.file_uploader("📄 Fichier de holders (CSV)", type="csv")
+tx_file = st.file_uploader("ðŸ§¾ Fichier de transactions (CSV)", type="csv")
+holders_file = st.file_uploader("ðŸ“„ Fichier de holders (CSV)", type="csv")
 
-st.subheader("🔖 Associer des noms personnalisés à des wallets")
-raw_aliases = st.text_area("Noms (exemple: 0xabc123etcxxxx: Kale le créateur)", height=150)
+st.subheader("ðŸ”– Associer des noms personnalisÃ©s Ã  des wallets")
+raw_aliases = st.text_area("Noms (ex: 0xabc123: Kale le crÃ©ateur)", height=150)
 
 alias_map = {}
 if raw_aliases:
@@ -27,7 +27,7 @@ if raw_aliases:
             alias_map[addr.strip().lower()] = name.strip()
 
 if tx_file and holders_file:
-    st.success("✅ Fichiers chargés, traitement en cours...")
+    st.success("âœ… Fichiers chargÃ©s, traitement en cours...")
 
     transactions = pd.read_csv(tx_file)
     holders = pd.read_csv(holders_file)
@@ -36,6 +36,9 @@ if tx_file and holders_file:
     transactions['Quantity'] = transactions['Quantity'].astype(str).str.replace(',', '').astype(float)
     holders['Balance'] = holders['Balance'].astype(str).str.replace(',', '').astype(float)
 
+    transactions['From'] = transactions['From'].astype(str).str.strip().str.lower()
+    holders['HolderAddress'] = holders['HolderAddress'].astype(str).str.strip().str.lower()
+
     latest_time = transactions['DateTime (UTC)'].max()
     start_time = latest_time - pd.Timedelta(hours=24)
     recent_sales = transactions[transactions['DateTime (UTC)'] >= start_time]
@@ -43,11 +46,8 @@ if tx_file and holders_file:
     sold_by_wallet.columns = ['Wallet', 'Total_Vendu_24h']
 
     top_20 = holders.head(20)
-    top_20['HolderAddress'] = top_20['HolderAddress'].str.lower()
-    sold_by_wallet['Wallet'] = sold_by_wallet['Wallet'].str.lower()
-
     merged = top_20.merge(sold_by_wallet, left_on='HolderAddress', right_on='Wallet', how='left')
-    exclude_wallets = ["0x2200C5ac2f9D8d635dB040A6F4eAb5ef6BF9E855"]
+    exclude_wallets = ["0x2200c5ac68f2b7ed93f2dfda39d8fdd2eddfddf6"]
     merged = merged[~merged['HolderAddress'].isin([e.lower() for e in exclude_wallets])]
 
     merged['Nom'] = merged['HolderAddress'].map(alias_map).fillna("")
@@ -57,10 +57,10 @@ if tx_file and holders_file:
     merged['Solde_USD'] = merged['Balance'] * LUIA_PRICE_USD
     merged['Ventes_USD'] = merged['Total_Vendu_24h'].fillna(0) * LUIA_PRICE_USD
 
-    st.subheader("📋 Résumé des top 20 holders")
+    st.subheader("ðŸ“‹ RÃ©sumÃ© des top 20 holders")
     st.dataframe(merged[['Nom', 'HolderAddress', 'Balance', 'Solde_USD', 'Total_Vendu_24h', 'Ventes_USD']])
 
-    st.subheader("📈 Graphique des soldes vs ventes")
+    st.subheader("ðŸ“ˆ Graphique des soldes vs ventes")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.bar(merged['Label'], merged['Balance'], label='Solde actuel')
     ax.bar(merged['Label'], merged['Total_Vendu_24h'].fillna(0), label='Vendu (24h)', alpha=0.7)
@@ -69,13 +69,13 @@ if tx_file and holders_file:
     ax.legend()
     st.pyplot(fig)
 
-    st.subheader("📤 Génération du rapport Word")
+    st.subheader("ðŸ“¤ GÃ©nÃ©ration du rapport Word")
 
-    if st.button("📝 Mise au format Word du rapport complet "):
+    if st.button("ðŸ“ TÃ©lÃ©charger le rapport complet Word"):
         doc = Document()
-        doc.add_heading("Analyse des ventes sur 24h – Token LUIA", level=1)
+        doc.add_heading("Analyse des ventes sur 24h â€“ Token LUIA", level=1)
         doc.add_paragraph(f"Date : {datetime.utcnow().strftime('%d/%m/%Y %H:%M UTC')}")
-        doc.add_paragraph("Analyse des mouvements des top holders, avec équivalents en USD, détails des ventes et graphique.")
+        doc.add_paragraph("Analyse des mouvements des top holders, avec Ã©quivalents en USD, dÃ©tails des ventes et graphique.")
 
         tmp_chart = tempfile.mktemp(suffix=".png")
         fig.savefig(tmp_chart)
@@ -102,16 +102,16 @@ if tx_file and holders_file:
             cells[5].text = f"{row['Ventes_USD']:,.2f} $"
 
         doc.add_page_break()
-        doc.add_heading("Top 5 vendeurs – Détail des transactions", level=2)
+        doc.add_heading("Top 5 vendeurs â€“ DÃ©tail des transactions", level=2)
         top5 = merged.nlargest(5, 'Total_Vendu_24h')
         for _, wallet in top5.iterrows():
             addr = wallet['HolderAddress']
             name = wallet['Nom'] or addr
             doc.add_heading(f"{name}", level=3)
-            subtx = recent_sales[recent_sales['From'].str.lower() == addr]
+            subtx = recent_sales[recent_sales['From'] == addr]
             subtx = subtx.sort_values('DateTime (UTC)')
             if subtx.empty:
-                doc.add_paragraph("Aucune transaction trouvée.")
+                doc.add_paragraph("Aucune transaction trouvÃ©e.")
             else:
                 tx_table = doc.add_table(rows=1, cols=3)
                 tx_table.style = 'Table Grid'
@@ -125,12 +125,12 @@ if tx_file and holders_file:
                     row[1].text = f"{tx['Quantity']:,.2f}"
                     row[2].text = f"{tx['Quantity'] * LUIA_PRICE_USD:,.2f} $"
 
-        doc.add_paragraph("\n\nRapport généré automatiquement et signé par Jarvis.")
+        doc.add_paragraph("\n\nRapport gÃ©nÃ©rÃ© automatiquement et signÃ© par Jarvis.")
         output = tempfile.mktemp(suffix=".docx")
         doc.save(output)
 
         with open(output, "rb") as f:
-            st.download_button("📄 Télécharger le rapport Word", f, file_name="rapport_luia_complet.docx")
+            st.download_button("ðŸ“„ TÃ©lÃ©charger le rapport Word", f, file_name="rapport_luia_complet.docx")
 
         os.remove(tmp_chart)
         os.remove(output)
